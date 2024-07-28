@@ -8,12 +8,15 @@ from selenium.webdriver.common.by import By
 def save_data(data: list) -> None:
     with open('sw_data_new.csv', 'w', encoding="utf-8", newline="") as f:
         writer = csv.writer(f, delimiter=";")
-        for row in data:
-            writer.writerow(row)
+        writer.writerow(data[0])
+        for row in data[1:]:
+            if row[0] != "Номер торгов":
+                print(row[0])
+                writer.writerow(row)
 
 
 def parsing_data(driver: Chrome) -> list[list[str]]:
-    time.sleep(10)
+    time.sleep(5)
     result: list[list[str]] = list()
 
     soup = BeautifulSoup(driver.page_source, 'lxml')
@@ -42,7 +45,13 @@ def data_collection(url: str) -> list[list[str]]:
 
     option.add_experimental_option("excludeSwitches", ["enable-automation"])
     option.add_experimental_option('useAutomationExtension', False)
-    option.add_argument("headless")
+    option.add_argument("--headless=new")
+    option.add_argument('--disable-gpu')
+    option.add_argument('--enable-javascript')
+    option.add_argument('--no-sandbox')
+    option.add_argument('--ignore-certificate-errors')
+    option.add_argument('--allow-insecure-localhost')
+    option.add_argument("--user-agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0'")
     driver: Chrome = Chrome(options=option)
     driver.get(url)
 
