@@ -12,9 +12,8 @@ def save_data(data: list) -> None:
             writer.writerow(row)
 
 
-def parsing_data(driver: Chrome, url: str) -> list[list[str]]:
-    driver.get(url)
-    time.sleep(5)
+def parsing_data(driver: Chrome) -> list[list[str]]:
+    time.sleep(10)
     result: list[list[str]] = list()
 
     soup = BeautifulSoup(driver.page_source, 'lxml')
@@ -43,10 +42,12 @@ def data_collection(url: str) -> list[list[str]]:
 
     option.add_experimental_option("excludeSwitches", ["enable-automation"])
     option.add_experimental_option('useAutomationExtension', False)
+    option.add_argument("headless")
     driver: Chrome = Chrome(options=option)
+    driver.get(url)
 
     while True:
-        for i in parsing_data(driver=driver, url=url):
+        for i in parsing_data(driver=driver):
             data.append(i)
 
         elements = driver.find_element(by=By.CLASS_NAME, value="pager").find_element(by=By.TAG_NAME, value="tr").find_elements(by=By.TAG_NAME, value="td")
@@ -61,18 +62,19 @@ def data_collection(url: str) -> list[list[str]]:
             elif el.text == "..." and pagination_page%10 == 1:
                 driver.execute_script("arguments[0].click();", el)
                 break
-        time.sleep(5)
-        pagination_page += 1
 
-        if pagination_page > 51:
-            save_data(data=data)
+        pagination_page += 1
+        print(f"[+] correct {pagination_page}")
+
+        if pagination_page > 15:
             break
     
     return data
 
 
 def main() -> None:
-    data_collection("https://old.bankrot.fedresurs.ru/TradeList.aspx")
+    data = data_collection("https://old.bankrot.fedresurs.ru/TradeList.aspx")
+    save_data(data=data)
 
 
 if __name__ == "__main__":
