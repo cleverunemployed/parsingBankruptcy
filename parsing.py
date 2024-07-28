@@ -1,6 +1,15 @@
 from selenium.webdriver import Chrome, ChromeOptions
 from bs4 import BeautifulSoup
 import time
+import csv
+from selenium.webdriver.common.by import By
+
+
+def save_data(data: list) -> None:
+    with open('sw_data_new.csv', 'w', encoding="utf-8", newline="") as f:
+        writer = csv.writer(f, delimiter=";")
+        for row in data:
+            writer.writerow(row)
 
 
 def parsing_data(driver: Chrome, url: str) -> list[list[str]]:
@@ -29,10 +38,36 @@ def parsing_data(driver: Chrome, url: str) -> list[list[str]]:
 def data_collection(url: str) -> list[list[str]]:
 
     data: list = []
-    driver: Chrome = Chrome()
+    pagination_page: int = 2
+    option = ChromeOptions()
 
-    data = parsing_data(driver=driver, url=url)
-    [print(x) for x in data]
+    option.add_experimental_option("excludeSwitches", ["enable-automation"])
+    option.add_experimental_option('useAutomationExtension', False)
+    driver: Chrome = Chrome(options=option)
+
+    while True:
+        for i in parsing_data(driver=driver, url=url):
+            data.append(i)
+
+        elements = driver.find_element(by=By.CLASS_NAME, value="pager").find_element(by=By.TAG_NAME, value="tr").find_elements(by=By.TAG_NAME, value="td")
+        for el in elements[1:]:
+            try:
+                el = el.find_element(by=By.TAG_NAME, value="a")
+            except:
+                pass
+            if el.text == str(pagination_page):
+                driver.execute_script("arguments[0].click();", el)
+                break
+            elif el.text == "..." and pagination_page%10 == 1:
+                driver.execute_script("arguments[0].click();", el)
+                break
+        time.sleep(5)
+        pagination_page += 1
+
+        if pagination_page > 51:
+            save_data(data=data)
+            break
+    
     return data
 
 
