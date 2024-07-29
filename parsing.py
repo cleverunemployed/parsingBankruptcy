@@ -1,5 +1,7 @@
+import os
 import csv
 import time
+import pandas as pd
 from bs4 import BeautifulSoup
 from selenium.webdriver.common.by import By
 from selenium.webdriver import Chrome, ChromeOptions 
@@ -17,6 +19,10 @@ def save_data(data: list) -> None:
         for row in data[1:]: # записываем все остальные строки, кроме начальных
             if row[0] != "Номер торгов":
                 writer.writerow(row)
+    
+    # конвентируем из csv в excel
+    pd.read_csv('./sw_data_new.csv').to_excel("result.xlsx", sheet_name="Data", index=False)
+    os.remove('./sw_data_new.csv')
 
 # функция сбора данных с одной страницы
 # принимает WebDriver
